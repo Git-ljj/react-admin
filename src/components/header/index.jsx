@@ -18,7 +18,7 @@ class Header extends React.Component{
           <div className="header-bottom-right">
             <span>2019-5-12 10：12：32</span>
             <img src="" alt="icon"/>
-            <span>晴</span>
+            <span>晴天</span>
           </div>
         </div>
       </div>
