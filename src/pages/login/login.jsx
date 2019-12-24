@@ -1,4 +1,5 @@
 import React from 'react'
+import {Redirect} from 'react-router-dom'
 import {
   Form,
   Icon,
@@ -7,7 +8,10 @@ import {
   message
 } from 'antd'
 import './login.less'
-import logo from './images/logo.png'
+import logo from '../../assets/images/logo.png'
+import {reqLogin} from '../../api'
+import memoryUtils from '../../utils/memoryUtils.js'
+import storageUtils from '../../utils/storageUtils.js'
 
 /**
  * Login组件：用户登录界面
@@ -43,10 +47,27 @@ class Login extends React.Component{
     // const values = form.getFieldsValue()  // 得到表单项的输入数据
 
     // 对所有表单字段进行验证
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       if (!err) {
         //当所有验证通过
-        console.log('Received values of form: ', values);
+        // console.log('Received values of form: ', values);
+        const {username,password} = values
+        const result = await reqLogin(username,password)
+        // console.log('请求成功',response.data=result)
+        if(result.status===0){
+          //提示登录成功
+          message.success('登陆成功')
+          //保存user
+          const user = result.data
+          memoryUtils.user = user //保存在内存中
+          storageUtils.saveUser(user) //保存在local中
+
+          //跳转到管理界面,不需要在回退回来，所以不用push,而用replace
+          this.props.history.replace('/')
+        }else{
+          //提示登陆失败
+          message.error(result.msg)
+        }
       }else{
         //对输入字段验证失败时，提示信息
         message.warning('输入不规范、登录失败！')
@@ -56,6 +77,12 @@ class Login extends React.Component{
 
 
   render(){
+    //如果用户已经登录，自动跳转至后台管理界面
+    const user = memoryUtils.user
+    if(user && user._id){
+      return <Redirect to='/' />
+    }
+    
     const { getFieldDecorator } = this.props.form;
     return(
       <div className="login">
@@ -63,7 +90,6 @@ class Login extends React.Component{
           <img src={logo} alt="logo"/>
           <h1>Admin 后台管理系统</h1>         
         </header>
-        
         <section className="login-content">
           <h2>用户登录</h2>
           <Form onSubmit={this.handleSubmit} className="login-form">
